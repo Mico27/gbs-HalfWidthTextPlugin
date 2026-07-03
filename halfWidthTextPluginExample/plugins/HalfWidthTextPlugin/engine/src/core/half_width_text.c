@@ -26,6 +26,7 @@
 #include "projectiles.h"
 #include "vm.h"
 #include "data/data_bootstrap.h"
+#include "data/states_defines.h"
 #include "half_width_text.h"
 
 // engine fields (order must match engine.json)
@@ -35,7 +36,11 @@ UBYTE hwt_last_tile;
 UBYTE hwt_text_drawn;
 UBYTE hwt_current_text_speed;
 
+// capacity of the pair-tile LRU cache; project-configurable through the
+// HWT_CACHE_MAX engine field (Settings -> Half-Width Text), 4 bytes WRAM per entry
+#ifndef HWT_CACHE_MAX
 #define HWT_CACHE_MAX 64
+#endif
 #define HWT_NULL 0xFFu
 
 // cache entry i owns VRAM tile (hwt_first_tile + i)

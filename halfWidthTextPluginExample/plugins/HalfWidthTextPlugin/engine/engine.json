@@ -6,7 +6,7 @@
       "label": "First VRAM tile reserved for half-width text",
       "description": "First background tile index (0-255) reserved for composed character-pair tiles. Must not overlap tiles used by the scene background (0 to 191 depending on the scene) or the UI/dialogue tiles (192-255).",
       "group": "Half-Width Text",
-      "type": "number",
+      "type": "slider",
       "cType": "UBYTE",
       "defaultValue": 128,
       "min": 0,
@@ -17,11 +17,22 @@
       "label": "Last VRAM tile reserved for half-width text",
       "description": "Last background tile index (inclusive) reserved for composed character-pair tiles. At most 64 tiles are used even if the range is larger.",
       "group": "Half-Width Text",
-      "type": "number",
+      "type": "slider",
       "cType": "UBYTE",
       "defaultValue": 191,
       "min": 0,
       "max": 255
+    },
+    {
+      "key": "HWT_CACHE_MAX",
+      "label": "Pair cache capacity (entries)",
+      "description": "Maximum number of character pairs the LRU cache can track. Each entry costs 4 bytes of WRAM and, when in use, one VRAM tile from the reserved range. The usable entry count at runtime is the smaller of this value and the reserved tile range size. Lower it to reclaim WRAM, raise it only alongside a larger reserved tile range.",
+      "group": "Half-Width Text",
+      "type": "slider",
+      "cType": "define",
+      "defaultValue": 64,
+      "min": 4,
+      "max": 128
     }
   ]
 }

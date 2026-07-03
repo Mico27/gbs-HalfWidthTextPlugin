@@ -38,7 +38,8 @@ The renderer handles the stock `ui_text_data` control-code set: `\001` text spee
 | Field | Default | Meaning |
 |---|---|---|
 | `hwt_first_tile` | 128 | First background tile index reserved for pair tiles. |
-| `hwt_last_tile` | 191 | Last reserved tile index (inclusive). Max 64 tiles are used. |
+| `hwt_last_tile` | 191 | Last reserved tile index (inclusive). At most `HWT_CACHE_MAX` tiles are used. |
+| `HWT_CACHE_MAX` | 64 | Pair-cache capacity (4–128 entries). Compile-time define: each entry costs 4 bytes of WRAM, so lowering it reclaims WRAM; raising it only helps together with a larger reserved tile range (usable entries = min(`HWT_CACHE_MAX`, range size)). |
 
 **Choosing the range:** scene background tilesets occupy tiles from 0 upward (up to 191); GB Studio UI frame/cursor/dialogue VWF tiles occupy 192–255. The default 128–191 is safe for scenes whose tileset uses fewer than 128 unique tiles. Adjust per scene with *Set Tile Range* if needed.
 
@@ -54,7 +55,7 @@ Fonts laid out as 96 tiles (rows of 16, starting at space) get an automatic ASCI
 
 ## Notes / caveats
 
-- The cache holds up to 64 character pairs. When full, the least recently used pair's tile is reused — text drawn long ago may visually corrupt if still on screen while many new pairs are drawn. Size the range for the amount of distinct text you keep on screen.
+- The cache holds up to `HWT_CACHE_MAX` (default 64) character pairs. When full, the least recently used pair's tile is reused — text drawn long ago may visually corrupt if still on screen while many new pairs are drawn. Size the range for the amount of distinct text you keep on screen.
 - Switching fonts (event or `\002` code) resets the pair cache; tiles already on screen keep their pixels until their slot is reused.
 - On CGB the current text palette and overlay priority are applied to the drawn tiles.
 - Coordinates are tilemap coordinates (0–31); on scrolling scenes the background layer wraps within the 32×32 map like the stock text renderer.
@@ -74,6 +75,6 @@ Measured against the stock GB Studio **4.3.0-e1** engine (per-file SDCC compile 
 | WRAM | +324 bytes |
 | ROM | +2,158 bytes (DMG) / +2,257 bytes (CGB) |
 
-- **WRAM:** 324 bytes — the poketcg-style pair-tile LRU cache tables in `half_width_text.c`.
+- **WRAM:** 324 bytes — the poketcg-style pair-tile LRU cache tables in `half_width_text.c`. Scales with the `HWT_CACHE_MAX` engine field at 4 bytes per entry (default 64 entries; e.g. 32 entries saves 128 bytes).
 - **Engine WRAM headroom:** the stock GB Studio 4.3.0 engine leaves about **854 bytes** of WRAM free (usable engine WRAM is 7,776 bytes at 0xC0A0–0xDF00; the stock engine uses 6,922 bytes). With this plugin installed roughly **530 bytes** remain. This figure does not depend on how many global variables your project defines: the script memory array has a fixed size of VM_HEAP_SIZE + (VM_MAX_CONTEXTS × VM_CONTEXT_STACK_SIZE) words — 768 + 16 × 64 = 1,792 words (3,584 bytes) with stock engine settings.
 - **SRAM:** not used.
