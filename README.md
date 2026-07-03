@@ -12,6 +12,12 @@ Pokémon TCG renders its small font like this:
 
 This plugin is a faithful C reimplementation of that mechanism on top of GB Studio's font and text pipeline.
 
+
+
+https://github.com/user-attachments/assets/a66f1b0d-80d3-4902-87c8-072a7697df88
+
+
+
 ## Installation
 
 1. Copy `src/HalfWidthTextPlugin` into your project's `plugins/` folder.
