@@ -1,0 +1,150 @@
+{
+  "_resourceType": "scene",
+  "id": "a1355f17-85a1-4b2f-b0f4-66a0cb496e6e",
+  "_index": 0,
+  "name": "Scene 1",
+  "backgroundId": "dbe6b39e-356e-46de-a81e-f54d52926814",
+  "tilesetId": "d540bf77-4936-4752-ab6e-da981968cdd2",
+  "width": 20,
+  "height": 18,
+  "type": "TOPDOWN",
+  "colorModeOverride": "none",
+  "paletteIds": [],
+  "spritePaletteIds": [],
+  "collisions": "",
+  "autoFadeSpeed": null,
+  "symbol": "scene_1",
+  "x": 104,
+  "y": 32,
+  "script": [
+    {
+      "command": "EVENT_HWT_RESET_CACHE",
+      "args": {
+        "__collapse": true
+      },
+      "id": "33760fe0-a0ab-4ab8-8efc-9722ad4650e7"
+    },
+    {
+      "command": "EVENT_SET_FONT",
+      "args": {
+        "fontId": "7f3a2b1c-9d4e-4c5f-8a6b-2e1d0c9b8a7f",
+        "__collapse": true
+      },
+      "id": "ac390a90-f47d-41fc-bd0a-3003ffed2b64"
+    },
+    {
+      "command": "EVENT_HWT_SET_TILE_RANGE",
+      "args": {
+        "firstTile": 128,
+        "lastTile": 191,
+        "placement": 1
+      },
+      "id": "0ca2fd22-01f8-444e-8d36-e83245d20092"
+    },
+    {
+      "command": "EVENT_HWT_DISPLAY_TEXT_BKG",
+      "args": {
+        "text": "COLOR ONLY: BANK 1 PLACEMENT\nAll composed pair tiles now live in\nVRAM tile data bank 1, selected per\nmap cell by attribute bit 3, so the\nreserved indices 128-191 no longer\ncompete with bank 0 scene tiles.\nPress A",
+        "x": 1,
+        "y": 1,
+        "__comment": false
+      },
+      "id": "934b8d49-d606-4428-8c31-8ef3f7b04d29"
+    },
+    {
+      "command": "EVENT_FADE_IN",
+      "args": {
+        "speed": "2",
+        "__collapse": true
+      },
+      "id": "e4eaa00b-33a7-4496-80e7-9bb27781e7e5"
+    },
+    {
+      "command": "EVENT_AWAIT_INPUT",
+      "args": {
+        "input": [
+          "a"
+        ]
+      },
+      "id": "9574f16b-15dd-418c-9e2c-9904e4618586"
+    },
+    {
+      "command": "EVENT_GBVM_SCRIPT",
+      "args": {
+        "script": "VM_CALL_NATIVE b_scroll_repaint, _scroll_repaint"
+      },
+      "id": "2976b56c-3891-44f0-8a3c-144e30b2c6f3"
+    },
+    {
+      "command": "EVENT_IDLE",
+      "args": {},
+      "id": "52afab19-105c-4cb2-ba5b-3d1c15913d27"
+    },
+    {
+      "command": "EVENT_HWT_SET_TILE_RANGE",
+      "args": {
+        "firstTile": 128,
+        "lastTile": 191,
+        "placement": 2
+      },
+      "id": "129f203f-eaf5-441e-bfde-c17f618ac938"
+    },
+    {
+      "command": "EVENT_HWT_DISPLAY_TEXT_SPEED",
+      "args": {
+        "text": "!S3!ALTERNATE PLACEMENT\nPair tiles now alternate between bank\n0 and bank 1, so the same 64-tile\nrange caches twice as many pairs.\nWatch both VRAM banks fill in a\ndebugger while this types out.\nPress A",
+        "layer": "background",
+        "x": 1,
+        "y": 1
+      },
+      "id": "243fb812-4f2b-496b-8602-6adffe06c64a"
+    },
+    {
+      "command": "EVENT_AWAIT_INPUT",
+      "args": {
+        "input": [
+          "a"
+        ]
+      },
+      "id": "598c6004-8ebe-4efc-9511-891a03943ef0"
+    },
+    {
+      "command": "EVENT_GBVM_SCRIPT",
+      "args": {
+        "script": "VM_CALL_NATIVE b_scroll_repaint, _scroll_repaint"
+      },
+      "id": "e589e3bd-6202-4074-97ac-299a7ab9baa8"
+    },
+    {
+      "command": "EVENT_IDLE",
+      "args": {},
+      "id": "62df2017-5e94-4562-8334-6cfb72029fbe"
+    },
+    {
+      "command": "EVENT_HWT_DISPLAY_DIALOGUE",
+      "args": {
+        "text": [
+          "This dialogue is drawn with\nalternate bank placement: even\ncache entries compose into bank 0,\nodd entries into bank 1, and the\nattribute byte routes every map\ncell to the right bank.\nPress A to close."
+        ],
+        "minHeight": 4,
+        "maxHeight": 7,
+        "textX": 1,
+        "textY": 1,
+        "textHeight": 5,
+        "position": "bottom",
+        "clearPrevious": true,
+        "showFrame": true,
+        "speedIn": -1,
+        "speedOut": -1,
+        "closeWhen": "key",
+        "closeButton": "a"
+      },
+      "id": "096e51e4-0987-43ce-9096-fae1557328b0"
+    }
+  ],
+  "playerHit1Script": [],
+  "playerHit2Script": [],
+  "playerHit3Script": [],
+  "playerSpriteSheetId": "11b5452b-187c-43a3-afb1-a1f4f74ffda2",
+  "autoFadeEventCollapse": false
+}

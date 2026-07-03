@@ -32,6 +32,7 @@
 // engine fields (order must match engine.json)
 UBYTE hwt_first_tile;
 UBYTE hwt_last_tile;
+UBYTE hwt_tile_placement;
 
 UBYTE hwt_text_drawn;
 UBYTE hwt_current_text_speed;
@@ -43,7 +44,23 @@ UBYTE hwt_current_text_speed;
 #endif
 #define HWT_NULL 0xFFu
 
-// cache entry i owns VRAM tile (hwt_first_tile + i)
+// where cached tiles live in VRAM (hwt_tile_placement engine field).
+// bank 1 placements only take effect on CGB (color-only or mixed mode on
+// color hardware): the tilemap attribute bit 3 selects the tile data bank,
+// so bank-1 pair tiles coexist with scene tiles of the same index in bank 0.
+// HWT_PLACEMENT_ALTERNATE spreads entries across both banks, doubling the
+// pairs a given tile range can hold.
+#define HWT_PLACEMENT_BANK0     0
+#define HWT_PLACEMENT_BANK1     1
+#define HWT_PLACEMENT_ALTERNATE 2
+
+// placement in effect for the current cache generation (bank-1 modes fall
+// back to bank 0 when not running on CGB hardware)
+static UBYTE hwt_placement_eff;
+
+// bank-0-only: cache entry i owns VRAM tile (hwt_first_tile + i); alternate
+// placement maps entries 2k/2k+1 onto tile (hwt_first_tile + k) in banks 0
+// and 1 respectively
 static UBYTE hwt_key_l[HWT_CACHE_MAX];   // left character of the pair
 static UBYTE hwt_key_r[HWT_CACHE_MAX];   // right character of the pair
 static UBYTE hwt_next[HWT_CACHE_MAX];    // towards least recently used
@@ -67,8 +84,24 @@ static UBYTE * hwt_dest_base;
 static UBYTE hwt_pending;                // buffered left char of an incomplete pair, 0 = none
 
 void hwt_cache_reset(void) BANKED {
-    UBYTE n = hwt_last_tile - hwt_first_tile + 1u;
-    if ((n == 0) || (n > HWT_CACHE_MAX) || (hwt_last_tile < hwt_first_tile)) n = HWT_CACHE_MAX;
+    UBYTE n;
+#ifdef CGB
+    hwt_placement_eff = (_is_CGB) ? hwt_tile_placement : HWT_PLACEMENT_BANK0;
+#else
+    hwt_placement_eff = HWT_PLACEMENT_BANK0;
+#endif
+    if (hwt_last_tile < hwt_first_tile) {
+        n = HWT_CACHE_MAX;
+    } else {
+        UBYTE range = hwt_last_tile - hwt_first_tile + 1u;   // 0 means the full 256 tiles
+        if (hwt_placement_eff == HWT_PLACEMENT_ALTERNATE) {
+            // one entry per tile per bank; avoid UBYTE overflow before clamping
+            n = (range > (HWT_CACHE_MAX >> 1)) ? HWT_CACHE_MAX : (UBYTE)(range << 1);
+        } else {
+            n = range;
+        }
+        if ((n == 0) || (n > HWT_CACHE_MAX)) n = HWT_CACHE_MAX;
+    }
     hwt_size = n;
     hwt_count = 0;
     hwt_head = hwt_tail = HWT_NULL;
@@ -98,9 +131,22 @@ static void hwt_fetch_glyph(UBYTE ch, UBYTE * dst) {
     }
 }
 
+// VRAM tile index owned by cache entry i
+static UBYTE hwt_entry_tile(UBYTE i) {
+    if (hwt_placement_eff == HWT_PLACEMENT_ALTERNATE) return hwt_first_tile + (i >> 1);
+    return hwt_first_tile + i;
+}
+
+// VRAM tile data bank the tile of cache entry i lives in
+static UBYTE hwt_entry_bank(UBYTE i) {
+    if (hwt_placement_eff == HWT_PLACEMENT_BANK1) return 1;
+    if (hwt_placement_eff == HWT_PLACEMENT_ALTERNATE) return i & 0x01u;
+    return 0;
+}
+
 // compose the two 4px glyphs into one 2bpp tile (both bitplanes set -> color 3,
 // same as poketcg CreateHalfWidthFontTile) and upload it to VRAM.
-static void hwt_compose_tile(UBYTE tile, UBYTE l, UBYTE r) {
+static void hwt_compose_tile(UBYTE tile, UBYTE bank, UBYTE l, UBYTE r) {
     UBYTE * dst = hwt_tile_buf;
     UBYTE row;
     hwt_fetch_glyph(l, hwt_glyph_l);
@@ -110,13 +156,21 @@ static void hwt_compose_tile(UBYTE tile, UBYTE l, UBYTE r) {
         *dst++ = row;
         *dst++ = row;
     }
+    (void)bank;
+#ifdef CGB
+    if (bank) VBK_REG = 1;
+#endif
     set_bkg_data(tile, 1, hwt_tile_buf);
+#ifdef CGB
+    if (bank) VBK_REG = 0;
+#endif
 }
 
 // look the pair up in the LRU list; on hit hoist the entry to the head and
 // reuse its tile, on miss allocate a fresh tile (or evict the least recently
-// used one) and render the pair into it. returns the VRAM tile index.
-static UBYTE hwt_get_pair_tile(UBYTE l, UBYTE r) {
+// used one) and render the pair into it.
+// returns the cache entry index (tile/bank via hwt_entry_tile/hwt_entry_bank).
+static UBYTE hwt_get_pair_entry(UBYTE l, UBYTE r) {
     UBYTE i, p, nx;
     for (i = hwt_head; i != HWT_NULL; i = hwt_next[i]) {
         if ((hwt_key_l[i] == l) && (hwt_key_r[i] == r)) {
@@ -131,7 +185,7 @@ static UBYTE hwt_get_pair_tile(UBYTE l, UBYTE r) {
                 hwt_prev[hwt_head] = i;
                 hwt_head = i;
             }
-            return hwt_first_tile + i;
+            return i;
         }
     }
     // miss
@@ -155,20 +209,25 @@ static UBYTE hwt_get_pair_tile(UBYTE l, UBYTE r) {
     if (hwt_head != HWT_NULL) hwt_prev[hwt_head] = i;
     hwt_head = i;
     if (hwt_tail == HWT_NULL) hwt_tail = i;
-    hwt_compose_tile(hwt_first_tile + i, l, r);
-    return hwt_first_tile + i;
+    hwt_compose_tile(hwt_entry_tile(i), hwt_entry_bank(i), l, r);
+    return i;
 }
 
 static void hwt_emit_pair(UBYTE l, UBYTE r) {
-    UBYTE tile = hwt_get_pair_tile(l, r);
+    UBYTE entry = hwt_get_pair_entry(l, r);
+    UBYTE tile = hwt_entry_tile(entry);
+    UBYTE bank = hwt_entry_bank(entry);
+    (void)bank;
     // wrap around within the 32-tile map row instead of bleeding into the next line
     if (((UBYTE)hwt_dest_ptr >> 5) != ((UBYTE)hwt_dest_base >> 5)) {
         hwt_dest_ptr -= 32u;
     }
 #ifdef CGB
+    // the attribute byte carries the palette and the tile data bank (bit 3)
+    // the pair tile was composed into
     if (_is_CGB) {
         VBK_REG = 1;
-        set_vram_byte(hwt_dest_ptr, overlay_priority | (text_palette & 0x07u));
+        set_vram_byte(hwt_dest_ptr, overlay_priority | (text_palette & 0x07u) | (bank ? 0x08u : 0x00u));
         VBK_REG = 0;
     }
 #endif
@@ -425,7 +484,8 @@ void hwt_reset_cache(SCRIPT_CTX * THIS) OLDCALL BANKED {
 
 void hwt_set_tile_range(SCRIPT_CTX * THIS) OLDCALL BANKED {
     // FN_ARG0 is the argument pushed last (top of VM stack)
-    hwt_first_tile = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
-    hwt_last_tile  = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
+    hwt_first_tile      = *(UBYTE *)VM_REF_TO_PTR(FN_ARG2);
+    hwt_last_tile       = *(UBYTE *)VM_REF_TO_PTR(FN_ARG1);
+    hwt_tile_placement  = *(UBYTE *)VM_REF_TO_PTR(FN_ARG0);
     hwt_cache_reset();
 }

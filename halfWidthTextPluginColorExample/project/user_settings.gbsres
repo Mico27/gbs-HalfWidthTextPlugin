@@ -1,0 +1,63 @@
+{
+  "_resourceType": "settings",
+  "worldScrollX": 0,
+  "worldScrollY": 0,
+  "zoom": 200,
+  "navigatorSplitSizes": [
+    1012,
+    30,
+    205,
+    30,
+    30
+  ],
+  "showNavigator": true,
+  "showCollisions": true,
+  "showConnections": "selected",
+  "showSceneScreenGrid": false,
+  "previewAsMono": false,
+  "showCollisionSlopeTiles": false,
+  "favoriteEvents": [
+    "EVENT_TEXT",
+    "EVENT_SWITCH_SCENE"
+  ],
+  "debuggerEnabled": true,
+  "debuggerScriptType": "gbvm",
+  "debuggerVariablesFilter": "all",
+  "debuggerCollapsedPanes": [],
+  "debuggerPauseOnScriptChanged": false,
+  "debuggerPauseOnWatchedVariableChanged": false,
+  "debuggerBreakpoints": [
+    {
+      "scriptEventId": "b1f71889-2eae-44b7-b200-8333330df24e",
+      "context": {
+        "type": "entity",
+        "entityType": "scene",
+        "entityId": "a1355f17-85a1-4b2f-b0f4-66a0cb496e6e",
+        "sceneId": "a1355f17-85a1-4b2f-b0f4-66a0cb496e6e",
+        "scriptKey": "script"
+      }
+    },
+    {
+      "scriptEventId": "2f8b7940-52c0-4a44-940c-82032175890a",
+      "context": {
+        "type": "entity",
+        "entityType": "scene",
+        "entityId": "a1355f17-85a1-4b2f-b0f4-66a0cb496e6e",
+        "sceneId": "a1355f17-85a1-4b2f-b0f4-66a0cb496e6e",
+        "scriptKey": "script"
+      }
+    },
+    {
+      "scriptEventId": "b52e5858-333a-42e7-a7b4-8e0cf90bd705",
+      "context": {
+        "type": "entity",
+        "entityType": "scene",
+        "entityId": "a1355f17-85a1-4b2f-b0f4-66a0cb496e6e",
+        "sceneId": "a1355f17-85a1-4b2f-b0f4-66a0cb496e6e",
+        "scriptKey": "script"
+      }
+    }
+  ],
+  "debuggerWatchedVariables": [],
+  "openBuildLogOnWarnings": true
+}

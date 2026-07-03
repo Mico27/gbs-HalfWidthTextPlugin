@@ -27,7 +27,7 @@ This plugin is a faithful C reimplementation of that mechanism on top of GB Stud
 | **Half-Width Text: Draw At Text Speed** | Types the text out at the current text speed on the background or overlay. A/B fast-forwards, blocks until done (actors keep updating). |
 | **Half-Width Text: Display Dialogue** | Full dialogue box like the stock Display Dialogue: overlay slides in, text types out at text speed, scrolls past its scroll height, closes on button / when finished / never (non-modal). 40 characters per line. |
 | **Half-Width Text: Reset Tile Cache** | Forgets all cached pair tiles. **Call in each scene's On Init** — scene loads overwrite VRAM, so a stale cache would map text to garbage tiles. |
-| **Half-Width Text: Set Tile Range** | Changes the reserved VRAM tile range at runtime and resets the cache. |
+| **Half-Width Text: Set Tile Range** | Changes the reserved VRAM tile range and tile placement (bank 0 / bank 1 / alternate) at runtime and resets the cache. |
 
 ### Supported control codes
 
@@ -39,9 +39,12 @@ The renderer handles the stock `ui_text_data` control-code set: `\001` text spee
 |---|---|---|
 | `hwt_first_tile` | 128 | First background tile index reserved for pair tiles. |
 | `hwt_last_tile` | 191 | Last reserved tile index (inclusive). At most `HWT_CACHE_MAX` tiles are used. |
+| `hwt_tile_placement` | Bank 0 only | Which VRAM tile data bank the pair tiles are uploaded to: **Bank 0 only**, **Bank 1 only (Color)** or **Alternate bank 0/1 (Color)**. See *Tile placement* below. |
 | `HWT_CACHE_MAX` | 64 | Pair-cache capacity (4–128 entries). Compile-time define: each entry costs 4 bytes of WRAM, so lowering it reclaims WRAM; raising it only helps together with a larger reserved tile range (usable entries = min(`HWT_CACHE_MAX`, range size)). |
 
 **Choosing the range:** scene background tilesets occupy tiles from 0 upward (up to 191); GB Studio UI frame/cursor/dialogue VWF tiles occupy 192–255. The default 128–191 is safe for scenes whose tileset uses fewer than 128 unique tiles. Adjust per scene with *Set Tile Range* if needed.
+
+**Tile placement (Game Boy Color):** on CGB the tilemap attribute byte's bit 3 selects which VRAM tile data bank a map cell reads from, and the plugin sets it per character cell. *Bank 1 only* stores every pair tile in bank 1, so the reserved indices stop competing with bank-0 scene tiles entirely; *Alternate bank 0/1* stores entries in both banks, so the same index range holds **twice** as many pairs (usable entries = min(`HWT_CACHE_MAX`, 2 × range size)). Both options are meant for Color Only mode (they also work in mixed color modes when running on GBC); on DMG hardware the plugin automatically falls back to *Bank 0 only*. In Color Only mode scene backgrounds may themselves use bank-1 tiles — pick a range whose bank-1 indices are free too.
 
 ## Making a half-width font
 
@@ -60,9 +63,11 @@ Fonts laid out as 96 tiles (rows of 16, starting at space) get an automatic ASCI
 - On CGB the current text palette and overlay priority are applied to the drawn tiles.
 - Coordinates are tilemap coordinates (0–31); on scrolling scenes the background layer wraps within the 32×32 map like the stock text renderer.
 
-## Example project
+## Example projects
 
-`halfWidthTextPluginExample/` — instant draws (including json-table accents), a typed-out line, and a scrolling half-width dialogue box.
+`halfWidthTextPluginExample/` — instant draws (including json-table accents), a typed-out line, and a scrolling half-width dialogue box (mono mode).
+
+`halfWidthTextPluginColorExample/` — Color Only mode version demonstrating the tile placement feature: draws with *Bank 1 only* placement, then switches to *Alternate bank 0/1* (via the Set Tile Range event) for the typed-out text and the dialogue. Builds to a CGB-only ROM.
 
 ---
 

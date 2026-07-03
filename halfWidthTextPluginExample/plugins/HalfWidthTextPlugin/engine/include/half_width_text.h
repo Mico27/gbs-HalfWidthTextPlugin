@@ -7,6 +7,7 @@
 // engine fields (order must match engine.json)
 extern UBYTE hwt_first_tile;
 extern UBYTE hwt_last_tile;
+extern UBYTE hwt_tile_placement;   // 0 = bank 0, 1 = bank 1, 2 = alternate (CGB only)
 
 extern UBYTE hwt_text_drawn;
 extern UBYTE hwt_current_text_speed;
