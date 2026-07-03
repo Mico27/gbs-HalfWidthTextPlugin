@@ -69,6 +69,19 @@ Fonts laid out as 96 tiles (rows of 16, starting at space) get an automatic ASCI
 - On CGB the current text palette and overlay priority are applied to the drawn tiles.
 - Coordinates are tilemap coordinates (0–31); on scrolling scenes the background layer wraps within the 32×32 map like the stock text renderer.
 
+## Compatibility with other plugins (engineAlt)
+
+`src/HalfWidthTextPlugin/engineAlt/` holds alternative engine builds for use alongside plugins that replace stock engine files (same convention as UiAltDisplayTextPlugin):
+
+| Variant | Use together with |
+|---|---|
+| `engineAlt/ContinuousScenePlugin/` | ContinuousScenePlugin |
+| `engineAlt/ScreenScrollPlugin/` | ScreenScrollPlugin |
+
+Those plugins scroll the hardware background map and track the visible origin in `bkg_offset_x` / `bkg_offset_y` (plus a `current_text_layer` global in their ui.h). The variant renderer starts background-layer text from the scrolled origin and wraps positions within the 32×32 map, like the host engines' own text renderer. Overlay/dialogue rendering is unchanged.
+
+To use one, replace the contents of the plugin's `engine/` folder with the matching `engineAlt/<PluginName>/` contents (the patched/distributable form selects the variant automatically through `engineAltRules` once generated with the plugin patch builder). Verified compiling against both host plugins with gb-studio-cli 4.3.0.
+
 ## Example projects
 
 `halfWidthTextPluginExample/` — instant draws (including json-table accents), a typed-out line, and a scrolling half-width dialogue box (mono mode).
