@@ -62,3 +62,18 @@ Fonts laid out as 96 tiles (rows of 16, starting at space) get an automatic ASCI
 ## Example project
 
 `halfWidthTextPluginExample/` — instant draws (including json-table accents), a typed-out line, and a scrolling half-width dialogue box.
+
+---
+
+## Memory Footprint
+
+Measured against the stock GB Studio **4.3.0-e1** engine (per-file SDCC compile with GB Studio's build flags, default engine settings). Values are the plugin's *delta* versus the stock engine; DMG build, with CGB noted where it differs. ROM cost lands in banked ROM (GB Studio's autobanker spreads it across switchable banks); using the plugin's events additionally compiles a few bytes of GBVM script per call into your project's script banks.
+
+| | Cost |
+|---|---|
+| WRAM | +324 bytes |
+| ROM | +2,158 bytes (DMG) / +2,257 bytes (CGB) |
+
+- **WRAM:** 324 bytes — the poketcg-style pair-tile LRU cache tables in `half_width_text.c`.
+- **Engine WRAM headroom:** the stock GB Studio 4.3.0 engine leaves about **854 bytes** of WRAM free (usable engine WRAM is 7,776 bytes at 0xC0A0–0xDF00; the stock engine uses 6,922 bytes). With this plugin installed roughly **530 bytes** remain. This figure does not depend on how many global variables your project defines: the script memory array has a fixed size of VM_HEAP_SIZE + (VM_MAX_CONTEXTS × VM_CONTEXT_STACK_SIZE) words — 768 + 16 × 64 = 1,792 words (3,584 bytes) with stock engine settings.
+- **SRAM:** not used.
