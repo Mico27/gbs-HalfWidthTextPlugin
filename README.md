@@ -1,6 +1,6 @@
 # gbs-HalfWidthTextPlugin
 
-**Version 4.3.0 — Requires GB Studio ≥ 4.3.0**
+**Version 4.3.1 — Requires GB Studio ≥ 4.3.0**
 
 A GB Studio engine plugin that draws **4px-wide (half-width) text — two characters per background tile** — using the technique from *Pokémon Trading Card Game* (GB). Glyphs come from a regular GB Studio **font asset**, so the font is edited like any other font, and characters are mapped through the font JSON's `table` field.
 
@@ -29,6 +29,8 @@ https://github.com/user-attachments/assets/a66f1b0d-80d3-4902-87c8-072a7697df88
 The Game Boy background is made of 8×8 tiles, so a 4px-wide character can't occupy a tile of its own. The plugin consumes half-width characters **in pairs** and composes each pair into a single tile.
 
 Because the same pairs recur constantly in normal text, composed tiles are kept in a **cache** occupying a reserved range of VRAM tiles. When a pair is already cached, drawing it costs nothing but a tilemap write. When it isn't, a new tile is composed — and if the reserved range is full, the least recently used pair is evicted to make room.
+
+The cache can be turned off entirely with the **Enable pair-tile cache** engine setting. Its bookkeeping is then compiled out — 259 bytes of WRAM and 324 bytes of ROM come back — and each pair is composed into the next tile of the reserved range, cycling round-robin. Repeated pairs no longer share a tile, so the range has to be big enough for every pair on screen at once (half the characters of the longest page).
 
 Text that ends mid-pair (end of string, newline, font switch) is padded with a half-width space.
 
@@ -87,9 +89,10 @@ Found under **Settings → Half-Width Text**.
 | **First VRAM tile reserved for half-width text** | 128 | First background tile index reserved for pair tiles. |
 | **Last VRAM tile reserved for half-width text** | 191 | Last reserved tile index, inclusive. |
 | **Tile placement (VRAM bank)** | Bank 0 only | Which VRAM tile data bank pair tiles are uploaded to: Bank 0 only, Bank 1 only (Color), or Alternate bank 0/1 (Color). |
-| **Pair cache capacity (entries)** | 64 | Pair-cache capacity, 4–128 entries. Each entry costs 4 bytes of WRAM, so lowering it reclaims WRAM. Raising it only helps together with a larger reserved tile range. |
+| **Enable pair-tile cache** | On | Keeps composed pair tiles in an LRU cache so repeated pairs reuse their tile. Turn it off to compile the cache out (−259 B WRAM, −324 B ROM) and compose every pair into the next reserved tile round-robin. |
+| **Pair cache capacity (entries)** | 64 | Pair-cache capacity, 4–128 entries. Each entry costs 4 bytes of WRAM, so lowering it reclaims WRAM. Raising it only helps together with a larger reserved tile range. Ignored when the cache is off. |
 
-Usable cache entries are `min(cache capacity, range size)` — or `min(cache capacity, 2 × range size)` with *Alternate bank 0/1*.
+Usable cache entries are `min(cache capacity, range size)` — or `min(cache capacity, 2 × range size)` with *Alternate bank 0/1*. With the cache disabled the capacity setting drops out and the whole reserved range is used.
 
 ---
 
@@ -97,8 +100,9 @@ Usable cache entries are `min(cache capacity, range size)` — or `min(cache cap
 
 - **The reserved range must not collide** with your scene background tiles (0 upward) or GB Studio's UI/dialogue tiles (192–255).
 - **The cache can overflow.** When it is full, the least recently used pair's tile is reused, so text drawn long ago can visually corrupt if it is still on screen while a lot of new text is drawn. Size the range for the amount of distinct text you keep on screen at once.
-- **Reset the cache on every scene load** — there is no automatic hook for it.
-- **Switching fonts resets the pair cache.** Tiles already on screen keep their pixels until their slot is reused.
+- **Reset the cache on every scene load** — there is no automatic hook for it. *Reset Tile Cache* also rewinds the round-robin cursor when the cache is disabled, so keep calling it either way.
+- **Switching fonts resets the pair cache.** Tiles already on screen keep their pixels until their slot is reused. With the cache disabled there is nothing to invalidate, so a font switch costs nothing.
+- **With the cache disabled, every pair is recomposed on every use** — two glyph fetches and a 16-byte VRAM upload per pair, where a cache hit was a single tilemap write. It is a WRAM/ROM trade, not a speed one.
 - Half-width text always renders **black-on-white, left-to-right**, like poketcg. The `\007` text colour and `\010` direction control codes are skipped; on CGB the current text palette and overlay priority are applied to the drawn tiles.
 - Coordinates are tilemap coordinates (0–31). On scrolling scenes the background layer wraps within the 32×32 map, like the stock text renderer.
 - Compatible variants are included for use alongside **ContinuousScenePlugin** and **ScreenScrollPlugin**, and are selected automatically.
@@ -143,8 +147,10 @@ move.
 
 | Setting | Bank 0 | WRAM | Banked ROM |
 |---|---|---|---|
+| Enable pair-tile cache | — | 259 B | 324 B |
 | Pair cache capacity (entries) *(slider 4–128, default 64)* | — | 4 B/step | — |
 
+- **Enable pair-tile cache**: measured from two full ROM builds of `halfWidthTextPluginExample` at the default 64-entry capacity (link map `_DATA`+`_INITIALIZED` and `_CODE_n` totals). Turning it off also removes the capacity slider's cost, since the LRU tables are what that slider sizes.
 - **Pair cache capacity (entries)**: going from 4 to 128 moves WRAM by +496 B.
 
 <details><summary>How these were measured</summary>
@@ -173,7 +179,7 @@ Measured against the stock GB Studio **4.3.0-e1** engine (per-file SDCC compile 
 | WRAM | +324 bytes |
 | ROM | +2,158 bytes (DMG) / +2,257 bytes (CGB) |
 
-- **WRAM:** 324 bytes for the pair-tile cache tables. Scales with the **Pair cache capacity** engine setting at 4 bytes per entry (default 64 entries; e.g. 32 entries saves 128 bytes).
+- **WRAM:** 324 bytes for the pair-tile cache tables. Scales with the **Pair cache capacity** engine setting at 4 bytes per entry (default 64 entries; e.g. 32 entries saves 128 bytes), and drops by 259 bytes when **Enable pair-tile cache** is turned off.
 - **Engine WRAM headroom:** the stock GB Studio 4.3.0 engine leaves about **854 bytes** of WRAM free (usable engine WRAM is 7,776 bytes at 0xC0A0–0xDF00; the stock engine uses 6,922 bytes). With this plugin installed roughly **530 bytes** remain. This figure does not depend on how many global variables your project defines: the script memory array has a fixed size of VM_HEAP_SIZE + (VM_MAX_CONTEXTS × VM_CONTEXT_STACK_SIZE) words — 768 + 16 × 64 = 1,792 words (3,584 bytes) with stock engine settings.
 - **SRAM:** not used.
 
