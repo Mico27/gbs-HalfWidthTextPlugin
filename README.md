@@ -91,6 +91,7 @@ Found under **Settings → Half-Width Text**.
 | **Tile placement (VRAM bank)** | Bank 0 only | Which VRAM tile data bank pair tiles are uploaded to: Bank 0 only, Bank 1 only (Color), or Alternate bank 0/1 (Color). |
 | **Enable pair-tile cache** | On | Keeps composed pair tiles in an LRU cache so repeated pairs reuse their tile. Turn it off to compile the cache out (−259 B WRAM, −324 B ROM) and compose every pair into the next reserved tile round-robin. |
 | **Pair cache capacity (entries)** | 64 | Pair-cache capacity, 4–128 entries. Each entry costs 4 bytes of WRAM, so lowering it reclaims WRAM. Raising it only helps together with a larger reserved tile range. Ignored when the cache is off. |
+| **Replace stock text rendering** | Off | Compiles GB Studio's own text renderer out and points the stock *Display Dialogue*, *Display Text* and *Menu* events at this plugin instead. Frees 1,629 B of ROM (1,965 B in Color mode) and tiles 204–255. See below. |
 
 Usable cache entries are `min(cache capacity, range size)` — or `min(cache capacity, 2 × range size)` with *Alternate bank 0/1*. With the cache disabled the capacity setting drops out and the whole reserved range is used.
 
@@ -112,6 +113,42 @@ Usable cache entries are `min(cache capacity, range size)` — or `min(cache cap
 The stock control-code set is handled: `\001` text speed, `\002` font switch (temporary within the text, like stock), `\003`/`\004` gotoxy and relative gotoxy in tile coordinates, `\005` escape, `\006` wait-for-input, `\013` CGB palette, `\n` newline, `\r` newline-with-scroll. GB Studio variables (`$Variable$`) are resolved before rendering.
 
 ---
+
+
+### Replacing the stock text renderer
+
+GB Studio's own renderer normally sits in the ROM alongside this plugin's, even in a
+project where every visible string is drawn by the plugin. **Replace stock text
+rendering** removes it.
+
+With the setting on, the plugin ships a copy of the engine's `ui.c` whose text renderer
+is compiled out, and supplies `ui_draw_text_buffer_char` itself. Nothing calls the
+plugin explicitly — the stock engine's own `ui_update()` resolves to it, so everything
+that used to draw stock text now draws half-width text:
+
+| | |
+|---|---|
+| **Display Dialogue**, **Display Text** | render in half-width text, without swapping in this plugin's events |
+| **Menu** | unchanged — same row height as stock text |
+
+Two things you get back:
+
+- **1,629 bytes of ROM** (**1,965** in a Color build), measured on the module, minus 8
+  bytes for the forwarder. Plus 5 bytes of WRAM.
+- **Tiles 204–255.** They were the stock renderer's scratch buffer, and the usual advice
+  is to keep clear of them unless nothing on screen uses stock text. With the stock
+  renderer gone there is nothing left to collide with, so those 52 tiles can go straight
+  into the reserved range.
+
+**Menus are unaffected.** This plugin's lines are one map row tall, exactly like stock
+text, so the stock menu driver's cursor rows already line up and `ui_run_menu` is left
+alone.
+
+With the setting off, the bundled `ui.c` is the engine's own file byte for byte, so it
+costs nothing and changes nothing. It does mean this plugin now overrides `ui.c`, so it
+cannot be combined with another plugin that overrides the same file unless one of them
+ships an `engineAlt` variant for the other — the ContinuousScene and ScreenScroll
+variants shipped here already do.
 
 ## Events Reference
 
