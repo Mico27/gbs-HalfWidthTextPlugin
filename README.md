@@ -302,20 +302,16 @@ the core compiles, move it independently of this plugin.
 Grouped by the date each change was merged into the official
 [gb-studio-plugins](https://github.com/gb-studio-dev/gb-studio-plugins) repository.
 
+Only bug fixes, new features and feature changes are listed. Engine version
+bumps, patch regeneration, packaging fixes and documentation edits are omitted.
+
 ### 2026-08-08
 
 - Added menu support and a "replace stock UI" engine setting.
-- Added variable display to the example project.
-- Updated the patches.
 
 ### 2026-08-07
 
 - Added an engine setting to enable or disable the tile cache.
-- README updates.
-
-### 2026-08-02
-
-- Regenerated the compatibility patches and rewrote the README.
 
 ### 2026-07-03
 
@@ -323,4 +319,3 @@ Grouped by the date each change was merged into the official
 - Configurable cache size in the engine settings.
 - Colour-only VRAM bank 1 support.
 - ScreenScroll and ContinuousScene plugin compatibility.
-- Example project.
