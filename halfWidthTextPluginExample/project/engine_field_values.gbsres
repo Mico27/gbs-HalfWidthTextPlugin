@@ -24,6 +24,22 @@
     {
       "id": "SHOOTER_WALL_COLLISION_GROUP",
       "value": "COLLISION_GROUP_NONE"
+    },
+    {
+      "id": "hwt_first_tile",
+      "value": 96
+    },
+    {
+      "id": "hwt_last_tile",
+      "value": 191
+    },
+    {
+      "id": "HWT_CACHE_ENABLED",
+      "value": 1
+    },
+    {
+      "id": "HWT_CACHE_MAX",
+      "value": 96
     }
   ]
 }

@@ -150,6 +150,53 @@ cannot be combined with another plugin that overrides the same file unless one o
 ships an `engineAlt` variant for the other — the ContinuousScene and ScreenScroll
 variants shipped here already do.
 
+
+## The Font Generator
+
+`src/*/tools/make_halfwidth_font.js` builds this plugin’s font asset from a `.ttf`, `.otf`
+or a GNU Unifont `.hex` file. Double-click **Make Half Width Font.bat** for a guided run, or drag
+a font onto it.
+
+```bash
+node src/*/tools/make_halfwidth_font.js --font pixelfont.ttf --project path/to/myGame
+```
+
+It writes `assets/fonts/<name>.png` (8×8 cells, 128×48) plus its `.gbsres` sidecar,
+keeping the id and symbol of any sidecar already there — so regenerating a font does not
+break the scene references or your Default Font setting.
+
+Embedded bitmap strikes are read straight out of the font when it has them, which is what
+pixel fonts want; otherwise the outlines are rasterised through GDI+ using the file
+itself, installed or not. Glyphs are measured and shifted as a group to sit inside **4px** of the 8px cell, since the renderer packs two glyphs per tile,
+and the tool warns rather than silently clipping when a font is too big for it.
+
+It also checks that all 96 glyphs are **distinct**. GB Studio’s font compiler
+deduplicates identical tiles, and this plugin’s `.json` `table` addresses glyphs by
+position — two characters drawn the same would collapse into one entry and shift every
+index after it. The tool names the offending pairs rather than letting the table quietly
+point at the wrong glyph.
+
+There are no dependencies: PNGs are written with node’s own zlib and `.ttf` files are
+parsed directly.
+
+
+### Showing a variable in text
+
+Text can print a variable’s value, and the examples do — the menu result line reports
+which option was chosen:
+
+```
+%d$00$     the value, as many digits as it needs
+%D3$00$    the value, padded to three digits
+```
+
+**The id is zero-padded to two digits.** `$00$` is global variable 0, `$01$` is variable 1.
+A bare `$0$` lexes without complaint but resolves to a “missing variable” placeholder that
+always reads 0, so a menu result would silently print zero however you answered. Check the
+compiled `.dw` line if you are unsure: it should name your variable, not a `..._LOCAL_...`.
+
+---
+
 ## Events Reference
 
 All events appear under the **Half-Width Text** group in the script editor.
@@ -162,6 +209,21 @@ All events appear under the **Half-Width Text** group in the script editor.
 | **Half-Width Text: Display Dialogue** | A full dialogue box like the stock *Display Dialogue*: the overlay slides in, text types out at text speed, scrolls past its scroll height, and closes on button press / when finished / never (non-modal). 40 characters per line. |
 | **Half-Width Text: Reset Tile Cache** | Forgets all cached pair tiles. Call this in each scene's On Init. |
 | **Half-Width Text: Set Tile Range** | Changes the reserved VRAM tile range and tile placement at runtime, and resets the cache. |
+| **Half-Width Text: Menu** | A menu whose options are drawn in half-width characters. The stock Menu event draws its options at full width. |
+
+
+### Menus
+
+A line of half-width text is one tilemap row tall, exactly like stock text, so the stock
+**Menu** event already lines its cursor up correctly — nothing needed rescaling. What it
+does not do is draw the options with this plugin: they come out at full width, next to
+half-width text everywhere else.
+
+**Half-Width Text: Menu** draws them properly. It calls `hwt_ui_run_menu` through a small
+native rather than emitting `VM_CHOICE`, because that instruction always reaches the stock
+`ui_run_menu` — whose loop would let the stock renderer paint over the options this plugin
+had just drawn. **The stock `ui_run_menu` is left completely alone**, so stock menus
+elsewhere keep working, and this event needs no engine setting.
 
 ---
 

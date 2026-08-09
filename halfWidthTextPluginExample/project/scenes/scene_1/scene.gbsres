@@ -103,10 +103,23 @@
       "id": "76b1ffbe-a31c-4d84-a95c-9158db3aee31"
     },
     {
+      "command": "EVENT_SET_VALUE",
+      "args": {
+        "variable": "0",
+        "value": {
+          "type": "number",
+          "value": 42
+        },
+        "__varDemo": true,
+        "__collapse": true
+      },
+      "id": "71d117f5-5776-400f-8f2e-ef109e163195"
+    },
+    {
       "command": "EVENT_HWT_DISPLAY_DIALOGUE",
       "args": {
         "text": [
-          "This is a half-width dialogue box!\nIt fits double characters on every\nline and scrolls like the stock\ndialogue when the text runs past\nits scroll height, while reusing\ncached pair tiles the whole way.\nPress A to close this window."
+          "This is a half-width dialogue box!\nIt fits double characters on every line.\nItem_Id currently holds %d$00$, printed\nstraight out of the variable into this text.\nPress A to close."
         ],
         "minHeight": 4,
         "maxHeight": 7,
@@ -124,6 +137,44 @@
         "closeDelayFrames": 30
       },
       "id": "3e8f7a6b-5c4d-4e3f-8a2b-1c0d9e8f7a6b"
+    },
+    {
+      "command": "EVENT_HWT_MENU",
+      "args": {
+        "variable": "0",
+        "items": 3,
+        "option1": "SWORD",
+        "option2": "SHIELD",
+        "option3": "POTION",
+        "layout": "narrow",
+        "cancelOnLastOption": false,
+        "cancelOnB": true,
+        "__collapse": false
+      },
+      "id": "f294fce7-b202-49ce-99f0-3c7bf6727ccc"
+    },
+    {
+      "command": "EVENT_HWT_DISPLAY_DIALOGUE",
+      "args": {
+        "text": [
+          "You chose item %d$00$ of three.\nZero means you pressed B to cancel.\nThe value came straight out of the variable.\nPress A to close."
+        ],
+        "minHeight": 4,
+        "maxHeight": 7,
+        "textX": 1,
+        "textY": 1,
+        "textHeight": 5,
+        "position": "bottom",
+        "clearPrevious": true,
+        "showFrame": "true",
+        "speedIn": -1,
+        "speedOut": -1,
+        "closeWhen": "key",
+        "closeButton": "a",
+        "closeDelayTime": 0.5,
+        "closeDelayFrames": 30
+      },
+      "id": "1e946c2b-bd0c-4ddb-ab71-a194bc3e29e8"
     }
   ],
   "playerHit1Script": [],
