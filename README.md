@@ -180,6 +180,10 @@ point at the wrong glyph.
 There are no dependencies: PNGs are written with node’s own zlib and `.ttf` files are
 parsed directly.
 
+The images are written on **GB Studio’s own font palette** — the DMG four-shade ramp plus
+magenta `(255,0,255)` for transparency — so they open looking like every other font asset
+in the editor, and magenta is unmistakably the colour the compiler trims away.
+
 ---
 
 ## Events Reference
