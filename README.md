@@ -296,3 +296,31 @@ the core compiles, move it independently of this plugin.
 
 </details>
 <!-- BANK0:END -->
+
+## Changelog
+
+Grouped by the date each change was merged into the official
+[gb-studio-plugins](https://github.com/gb-studio-dev/gb-studio-plugins) repository.
+
+### 2026-08-08
+
+- Added menu support and a "replace stock UI" engine setting.
+- Added variable display to the example project.
+- Updated the patches.
+
+### 2026-08-07
+
+- Added an engine setting to enable or disable the tile cache.
+- README updates.
+
+### 2026-08-02
+
+- Regenerated the compatibility patches and rewrote the README.
+
+### 2026-07-03
+
+- Initial release: 4px-wide text using the poketcg pair-tile LRU cache technique.
+- Configurable cache size in the engine settings.
+- Colour-only VRAM bank 1 support.
+- ScreenScroll and ContinuousScene plugin compatibility.
+- Example project.
