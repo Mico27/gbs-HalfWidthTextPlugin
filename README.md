@@ -16,9 +16,12 @@ https://github.com/user-attachments/assets/a66f1b0d-80d3-4902-87c8-072a7697df88
 2. [Project Setup](#project-setup)
 3. [Engine Settings](#engine-settings)
 4. [Size Limits and Restrictions](#size-limits-and-restrictions)
-5. [Events Reference](#events-reference)
-6. [Media](#media)
-7. [Memory Footprint](#memory-footprint)
+5. [The Font Generator](#the-font-generator)
+6. [Events Reference](#events-reference)
+7. [Media](#media)
+8. [Memory Footprint](#memory-footprint)
+9. [Bank 0 (HOME) Usage](#bank-0-home-usage)
+10. [Changelog](#changelog)
 
 ---
 
