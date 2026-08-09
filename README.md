@@ -114,7 +114,6 @@ The stock control-code set is handled: `\001` text speed, `\002` font switch (te
 
 ---
 
-
 ### Replacing the stock text renderer
 
 GB Studio's own renderer normally sits in the ROM alongside this plugin's, even in a
@@ -150,7 +149,6 @@ cannot be combined with another plugin that overrides the same file unless one o
 ships an `engineAlt` variant for the other — the ContinuousScene and ScreenScroll
 variants shipped here already do.
 
-
 ## The Font Generator
 
 `src/*/tools/make_halfwidth_font.js` builds this plugin’s font asset from a `.ttf`, `.otf`
@@ -179,22 +177,6 @@ point at the wrong glyph.
 There are no dependencies: PNGs are written with node’s own zlib and `.ttf` files are
 parsed directly.
 
-
-### Showing a variable in text
-
-Text can print a variable’s value, and the examples do — the menu result line reports
-which option was chosen:
-
-```
-%d$00$     the value, as many digits as it needs
-%D3$00$    the value, padded to three digits
-```
-
-**The id is zero-padded to two digits.** `$00$` is global variable 0, `$01$` is variable 1.
-A bare `$0$` lexes without complaint but resolves to a “missing variable” placeholder that
-always reads 0, so a menu result would silently print zero however you answered. Check the
-compiled `.dw` line if you are unsure: it should name your variable, not a `..._LOCAL_...`.
-
 ---
 
 ## Events Reference
@@ -210,7 +192,6 @@ All events appear under the **Half-Width Text** group in the script editor.
 | **Half-Width Text: Reset Tile Cache** | Forgets all cached pair tiles. Call this in each scene's On Init. |
 | **Half-Width Text: Set Tile Range** | Changes the reserved VRAM tile range and tile placement at runtime, and resets the cache. |
 | **Half-Width Text: Menu** | A menu whose options are drawn in half-width characters. The stock Menu event draws its options at full width. |
-
 
 ### Menus
 
