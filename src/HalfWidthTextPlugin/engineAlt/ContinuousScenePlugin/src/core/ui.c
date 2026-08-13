@@ -8,7 +8,7 @@
 //
 // Regenerate rather than hand-edit when the GB Studio engine changes.
 // ---------------------------------------------------------------------------
-﻿// must be in the same bank with ui_a.s
+// must be in the same bank with ui_a.s
 #pragma bank 1
 
 #include <string.h>

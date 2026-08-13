@@ -234,10 +234,14 @@ move.
 
 | Setting | Bank 0 | WRAM | Banked ROM |
 |---|---|---|---|
-| Enable pair-tile cache | — | 259 B | 324 B |
+| Enable pair-tile cache | — | **259 B** | **324 B** |
 | Pair cache capacity (entries) *(slider 4–128, default 64)* | — | 4 B/step | — |
+| Replace stock text rendering *(off by default — cost of turning it on)* | — | −5 B | −1,621 B |
 
-- **Enable pair-tile cache**: measured from two full ROM builds of `halfWidthTextPluginExample` at the default 64-entry capacity (link map `_DATA`+`_INITIALIZED` and `_CODE_n` totals). Turning it off also removes the capacity slider's cost, since the LRU tables are what that slider sizes.
+Turning off every on-by-default switch above frees **259 B** of WRAM, **324 B** of banked ROM — the full
+span between this plugin at its fullest and stripped to nothing. Treat it as a
+ceiling rather than a recipe: you keep whatever your game actually uses.
+
 - **Pair cache capacity (entries)**: going from 4 to 128 moves WRAM by +496 B.
 
 <details><summary>How these were measured</summary>
@@ -259,15 +263,18 @@ and settings that gate other settings only show their own contribution.
 
 ## Memory Footprint
 
-Measured against the stock GB Studio **4.3.0-e1** engine (per-file SDCC compile with GB Studio's build flags, default engine settings). Values are the plugin's *delta* versus the stock engine; DMG build, with CGB noted where it differs. ROM cost lands in banked ROM (GB Studio's autobanker spreads it across switchable banks); using the plugin's events additionally compiles a few bytes of GBVM script per call into your project's script banks.
+Measured against the stock GB Studio **4.3.0-e1** engine by `measure_plugin_memory.js` (per-file SDCC compile with GB Studio's own build flags, at default engine settings; report of 2026-08-13). Figures are this plugin's *delta* versus stock — a file that replaces a stock engine file counts only the difference, which is why a plugin can come out negative. Using the plugin's events additionally compiles a few bytes of GBVM script per call into your project's script banks, on top of the fixed cost below.
 
-| | Cost |
+| Budget | Cost |
 |---|---|
-| WRAM | +324 bytes |
-| ROM | +2,158 bytes (DMG) / +2,257 bytes (CGB) |
+| Bank 0 (HOME) | 0 bytes |
+| WRAM | +326 bytes |
+| Banked ROM | +2,819 bytes |
 
-- **WRAM:** 324 bytes for the pair-tile cache tables. Scales with the **Pair cache capacity** engine setting at 4 bytes per entry (default 64 entries; e.g. 32 entries saves 128 bytes), and drops by 259 bytes when **Enable pair-tile cache** is turned off.
-- **Engine WRAM headroom:** the stock GB Studio 4.3.0 engine leaves about **854 bytes** of WRAM free (usable engine WRAM is 7,776 bytes at 0xC0A0–0xDF00; the stock engine uses 6,922 bytes). With this plugin installed roughly **530 bytes** remain. This figure does not depend on how many global variables your project defines: the script memory array has a fixed size of VM_HEAP_SIZE + (VM_MAX_CONTEXTS × VM_CONTEXT_STACK_SIZE) words — 768 + 16 × 64 = 1,792 words (3,584 bytes) with stock engine settings.
+- **Bank 0:** nothing. Every function the plugin adds is compiled into a switchable ROM bank.
+- **WRAM:** 326 bytes, nearly all of it the pair-tile cache tables. Scales with the **Pair cache capacity** setting at 4 bytes per entry (default 64; 32 entries saves 128 bytes), and drops by 259 bytes when **Enable pair-tile cache** is turned off.
+- **Banked ROM:** 2,819 bytes for the renderer. Enabling *Replace stock text rendering* takes 1,621 bytes back off it, because the stock renderer stops being compiled in.
+- **Engine WRAM headroom:** a stock GB Studio 4.3.0 project leaves about **854 bytes** of WRAM free (usable engine WRAM is 7,776 bytes at 0xC0A0–0xDF00; the stock engine uses 6,922). With this plugin installed roughly **528 bytes** remain. That does not change with the number of global variables your project defines: the script memory array is a fixed 3,584 bytes at stock engine settings (VM_HEAP_SIZE + VM_MAX_CONTEXTS × VM_CONTEXT_STACK_SIZE = 768 + 16 × 64 words).
 - **SRAM:** not used.
 
 ---
@@ -283,25 +290,9 @@ runs out of.
 | | Bytes |
 |---|---|
 | Bank 0 used by this plugin | **0** |
-| Bank 0 free with this plugin installed | **1,451** of 16,384 (91% used) |
 
-**This plugin costs nothing in bank 0.** All of its code lives in a switchable
-ROM bank; nothing it adds is resident in bank 0.
-
-<details><summary>How this was measured</summary>
-
-GB Studio 4.3.2, DMG target, default engine settings. Each module's bank 0
-contribution is the `A _HOME size` record that SDCC writes into its `.rel`
-object, summed over the engine sources this plugin provides. Stock sizes come
-from building projects whose only plugin ships no engine C, so every module in
-them is the untouched engine; two such builds were compared and agreed on all
-73 shared modules.
-
-The "free" figure is a stock project with this plugin and nothing else. Your
-own number will differ: other plugins, and any engine settings that change what
-the core compiles, move it independently of this plugin.
-
-</details>
+**This plugin costs nothing in bank 0.** Every one of its functions is compiled
+into a switchable ROM bank; nothing it adds is resident in bank 0.
 <!-- BANK0:END -->
 
 ## Changelog
